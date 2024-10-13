@@ -189,14 +189,14 @@ void runUserInterface(TreeNode* root) {
 
     while (1) {
         printf("명령 입력: ");
-        scanf_s(" %c", &command);
+        scanf(" %c", &command);
 
         switch (command) {
         case 'i':
         {
             int moveCount = 0; // 이동 횟수 초기화
             printf("추가할 값 입력: ");
-            scanf_s("%d", &data);
+            scanf("%d", &data);
             root = insertMaxHeapTree(root, data, &moveCount);
             printf("노드가 추가된 후 트리:\n");
             printHeap(root);
