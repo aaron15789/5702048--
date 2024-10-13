@@ -1,0 +1,257 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct TreeNode {
+    int data;
+    struct TreeNode* left;
+    struct TreeNode* right;
+    struct TreeNode* parent; // 부모 포인터 추가
+} TreeNode;
+
+// 새로운 노드 생성
+TreeNode* createNode(int data, TreeNode* parent) {
+    TreeNode* newNode = (TreeNode*)malloc(sizeof(TreeNode));
+    if (newNode == NULL) {
+        fprintf(stderr, "메모리 할당 실패\n");
+        exit(EXIT_FAILURE);
+    }
+    newNode->data = data;
+    newNode->left = newNode->right = NULL;
+    newNode->parent = parent; // 부모 설정
+    return newNode;
+}
+
+// 최대 히프 삽입
+TreeNode* insertMaxHeapTree(TreeNode* root, int data, int* moveCount) {
+    if (root == NULL) {
+        return createNode(data, NULL);
+    }
+
+    // 힙의 삽입을 구현하기 위해 큐를 사용하여 레벨 순서로 삽입
+    TreeNode** queue = (TreeNode**)malloc(100 * sizeof(TreeNode*));
+    int front = 0, rear = 0;
+    queue[rear++] = root;
+
+    TreeNode* newNode = NULL;
+
+    while (front < rear) {
+        TreeNode* current = queue[front++];
+
+        // 왼쪽 자식이 비어있으면 새로운 노드를 추가
+        if (current->left == NULL) {
+            newNode = createNode(data, current);
+            current->left = newNode;
+            (*moveCount)++; // 노드 이동 카운트 증가
+            break;
+        }
+        else {
+            queue[rear++] = current->left;
+        }
+
+        // 오른쪽 자식이 비어있으면 새로운 노드를 추가
+        if (current->right == NULL) {
+            newNode = createNode(data, current);
+            current->right = newNode;
+            (*moveCount)++; // 노드 이동 카운트 증가
+            break;
+        }
+        else {
+            queue[rear++] = current->right;
+        }
+    }
+
+    free(queue);
+
+    // 최대 히프 성질 유지
+    while (newNode->parent != NULL && newNode->data > newNode->parent->data) {
+        int temp = newNode->data;
+        newNode->data = newNode->parent->data;
+        newNode->parent->data = temp;
+        (*moveCount)++; // 노드 이동 카운트 증가
+        newNode = newNode->parent; // 부모 노드로 이동
+    }
+
+    return root;
+}
+
+// 루트 삭제
+TreeNode* deleteRoot(TreeNode* root, int* moveCount) {
+    if (root == NULL) return NULL;
+
+    // 마지막 노드 찾기
+    TreeNode* lastNode = NULL;
+    TreeNode** queue = (TreeNode**)malloc(100 * sizeof(TreeNode*));
+    int front = 0, rear = 0;
+    queue[rear++] = root;
+
+    while (front < rear) {
+        TreeNode* current = queue[front++];
+        lastNode = current; // 마지막 노드 업데이트
+        if (current->left != NULL) {
+            queue[rear++] = current->left;
+        }
+        if (current->right != NULL) {
+            queue[rear++] = current->right;
+        }
+    }
+
+    // 루트 노드의 데이터를 마지막 노드의 데이터로 교체
+    root->data = lastNode->data;
+
+    // 마지막 노드 삭제
+    if (lastNode->parent != NULL) {
+        if (lastNode->parent->left == lastNode) {
+            lastNode->parent->left = NULL;
+        }
+        else {
+            lastNode->parent->right = NULL;
+        }
+    }
+    else {
+        // 마지막 노드가 루트인 경우
+        free(lastNode);
+        return NULL;
+    }
+
+    free(lastNode);
+    (*moveCount)++; // 노드 이동 카운트 증가
+
+    // 최대 히프 성질 유지
+    TreeNode* current = root;
+    while (current->left || current->right) {
+        TreeNode* largerChild = NULL;
+
+        if (current->left && current->right) {
+            largerChild = (current->left->data > current->right->data) ? current->left : current->right;
+        }
+        else if (current->left) {
+            largerChild = current->left;
+        }
+        else {
+            largerChild = current->right;
+        }
+
+        if (current->data < largerChild->data) {
+            int temp = current->data;
+            current->data = largerChild->data;
+            largerChild->data = temp;
+            current = largerChild; // 다음 루프에서 자식으로 이동
+        }
+        else {
+            break; // 더 이상 힙 성질 위반이 없으면 종료
+        }
+    }
+
+    free(queue);
+    return root; // 새로운 루트 반환
+}
+
+// 레벨별 출력
+void printHeap(TreeNode* root) {
+    if (root == NULL) {
+        printf("히프가 비어 있습니다.\n");
+        return;
+    }
+
+    int level = 0;
+    TreeNode** queue = (TreeNode**)malloc(100 * sizeof(TreeNode*));
+    int front = 0, rear = 0;
+
+    queue[rear++] = root;
+
+    while (front < rear) {
+        int count = rear - front;
+        printf("레벨 %d: ", level);
+
+        for (int i = 0; i < count; i++) {
+            TreeNode* current = queue[front++];
+            printf("%d ", current->data);
+            if (current->left != NULL) {
+                queue[rear++] = current->left;
+            }
+            if (current->right != NULL) {
+                queue[rear++] = current->right;
+            }
+        }
+        printf("\n");
+        level++;
+    }
+
+    free(queue);
+}
+
+// 사용자 인터페이스
+void runUserInterface(TreeNode* root) {
+    char command;
+    int data;
+
+    printf("메뉴: (i) 추가, (d) 삭제, (p) 출력, (c) 종료\n");
+
+    while (1) {
+        printf("명령 입력: ");
+        scanf_s(" %c", &command);
+
+        switch (command) {
+        case 'i':
+        {
+            int moveCount = 0; // 이동 횟수 초기화
+            printf("추가할 값 입력: ");
+            scanf_s("%d", &data);
+            root = insertMaxHeapTree(root, data, &moveCount);
+            printf("노드가 추가된 후 트리:\n");
+            printHeap(root);
+            printf("노드 이동 횟수: %d\n", moveCount);
+        }
+        break;
+        case 'd':
+        {
+            int moveCount = 0; // 이동 횟수 초기화
+            if (root == NULL) {
+                printf("삭제할 노드가 없습니다.\n");
+            }
+            else {
+                root = deleteRoot(root, &moveCount);
+                printf("루트 노드가 삭제되었습니다. 노드 이동 횟수: %d\n", moveCount);
+            }
+        }
+        break;
+        case 'p':
+            printf("현재 히프 상태:\n");
+            printHeap(root);
+            break;
+        case 'c':
+            printf("프로그램 종료.\n");
+            return;
+        default:
+            printf("올바른 명령어가 아닙니다.\n");
+            break;
+        }
+    }
+}
+
+// 메모리 해제
+void freeHeap(TreeNode* root) {
+    if (root != NULL) {
+        freeHeap(root->left);
+        freeHeap(root->right);
+        free(root);
+    }
+}
+
+// 메인 함수
+int main() {
+    int inputData[] = { 90, 89, 70, 36, 75, 63, 13, 21, 18, 5 };
+    int size = sizeof(inputData) / sizeof(inputData[0]);
+    TreeNode* root = NULL;
+
+    // 초기 데이터로 트리에 노드 추가
+    for (int i = 0; i < size; i++) {
+        int moveCount = 0;
+        root = insertMaxHeapTree(root, inputData[i], &moveCount);
+    }
+
+    runUserInterface(root);
+    freeHeap(root); // 메모리 해제
+
+    return 0;
+}
