@@ -1,0 +1,159 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_NODES 11
+
+int graph[MAX_NODES][MAX_NODES] = { 0 };
+int visited[MAX_NODES] = { 0 };
+
+void insert_edge_mat_graph(int u, int v) {
+    graph[u][v] = 1;
+    graph[v][u] = 1; // 무방향 그래프이므로 양방향 모두 1로 설정
+}
+
+void dfs(int start, int goal) {
+    int stack[MAX_NODES];
+    int top = -1;
+    int count = 0;
+    int found = 0;
+
+    stack[++top] = start;
+    visited[start] = 1;
+
+    printf("%d ", start);
+    count++;
+
+    while (top != -1) {
+        int current = stack[top];
+        int found_next = 0;
+
+        if (current == goal) {
+            found = 1;
+            break;
+        }
+
+        for (int i = 0; i < MAX_NODES; i++) {  // i를 0부터 탐색하도록 변경
+            if (graph[current][i] == 1 && !visited[i]) {
+                stack[++top] = i;
+                visited[i] = 1;
+                printf("%d ", i);
+                count++;
+                found_next = 1;
+                break;
+            }
+        }
+
+        if (!found_next) {
+            printf("(백트래킹:%d) ", stack[top--]);
+        }
+    }
+
+    if (found) {
+        printf("\n탐색 성공: %d\n", goal);
+        printf("방문한 노드의 수: %d\n", count);
+    }
+    else {
+        printf("\n탐색 실패: %d는 그래프에 존재하지 않습니다.\n", goal);
+    }
+}
+
+void bfs(int start, int goal) {
+    int queue[MAX_NODES];
+    int front = 0, rear = 0;
+    int count = 0;
+    int found = 0;
+
+    queue[rear++] = start;
+    visited[start] = 1;
+
+    printf("%d ", start);
+    count++;
+
+    while (front < rear) {
+        int current = queue[front++];
+
+        if (current == goal) {
+            found = 1;
+            break;
+        }
+
+        for (int i = 0; i < MAX_NODES; i++) {
+            if (graph[current][i] == 1 && !visited[i]) {
+                queue[rear++] = i;
+                visited[i] = 1;
+                printf("%d ", i);
+                count++;
+            }
+        }
+    }
+
+    if (found) {
+        printf("\n탐색 성공: %d\n", goal);
+        printf("방문한 노드의 수: %d\n", count);
+    }
+    else {
+        printf("\n탐색 실패: %d는 그래프에 존재하지 않습니다.\n", goal);
+    }
+}
+
+void reset_visited() {
+    for (int i = 0; i < MAX_NODES; i++) {
+        visited[i] = 0;
+    }
+}
+
+int main() {
+    // 엣지 추가
+    insert_edge_mat_graph(1, 4);
+    insert_edge_mat_graph(1, 5);
+    insert_edge_mat_graph(1, 7);
+    insert_edge_mat_graph(1, 10);
+    insert_edge_mat_graph(2, 0);
+    insert_edge_mat_graph(3, 4);
+    insert_edge_mat_graph(4, 5);
+    insert_edge_mat_graph(4, 6);
+    insert_edge_mat_graph(4, 7);
+    insert_edge_mat_graph(4, 0);
+    insert_edge_mat_graph(4, 2);
+    insert_edge_mat_graph(6, 0);
+    insert_edge_mat_graph(6, 8);
+    insert_edge_mat_graph(7, 10);
+    insert_edge_mat_graph(9, 0);
+    insert_edge_mat_graph(2, 3);
+    insert_edge_mat_graph(3, 5);
+    insert_edge_mat_graph(5, 0);
+    insert_edge_mat_graph(6, 7);
+    insert_edge_mat_graph(8, 9);
+    insert_edge_mat_graph(10, 8);
+
+    int choice, start, goal;
+
+    while (1) {
+        printf("\n1 : 깊이 우선 탐색\n");
+        printf("2 : 너비 우선 탐색\n");
+        printf("3 : 종료\n");
+        printf("메뉴 입력: ");
+        scanf_s("%d", &choice);
+
+        if (choice == 3) {
+            break;
+        }
+
+        printf("시작 번호와 탐색할 값 입력: ");
+        scanf_s("%d %d", &start, &goal);
+
+        reset_visited(); // 방문 배열 초기화
+
+        if (choice == 1) {
+            dfs(start, goal);
+        }
+        else if (choice == 2) {
+            bfs(start, goal);
+        }
+        else {
+            printf("잘못된 메뉴 선택입니다.\n");
+        }
+    }
+
+    return 0;
+}
