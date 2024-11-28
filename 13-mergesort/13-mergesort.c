@@ -14,7 +14,7 @@ void generateRandomArray(int* array) {
     }
 }
 
-// 배열 부분 출력 (처음 10개 + 중앙 근처)
+// 배열 부분 출력
 void printPartialArray(int* array) {
     for (int i = 0; i < 10; i++) { // 처음 10개 값
         printf("%3d ", array[i]);
@@ -81,7 +81,7 @@ void merge(int* array, int left, int mid, int right, int* stepCount, int isFirst
     free(leftArray);
     free(rightArray);
 
-    // 병합 후 출력 (10번마다, 첫 실행에 한해 출력)
+    // 병합 후 출력
     if (isFirstRun && (*stepCount % 10 == 0)) {
         printPartialArray(array);
     }
@@ -106,7 +106,7 @@ void iterativeMergeSort(int* array, int isFirstRun) {
     }
 }
 
-// 배열 전체 출력 (최종 결과용)
+// 배열 전체 출력
 void printArray(int* array) {
     for (int i = 0; i < SIZE; i++) {
         printf("%3d ", array[i]);
